@@ -1,0 +1,259 @@
+Disassembly Listing for CAN-2
+Generated From:
+C:/Users/Marcel/Dropbox/School/CAN-2/dist/default/production/CAN-2.production.cof
+17-jun-2013 9:36:38
+
+---  C:/Users/Marcel/Dropbox/School/CAN-2/plib/Timers/t0write.c  ----------------------------------------
+010C  C013     MOVFF config, timer
+010E  F015     NOP
+0110  C014     MOVFF 0x14, 0x16
+0112  F016     NOP
+011E  C001     MOVFF timer0, timer
+0120  F003     NOP
+0122  C002     MOVFF 0x2, 0x4
+0124  F004     NOP
+0114  C016     MOVFF 0x16, TMR0H
+0116  FFD7     NOP
+0126  C004     MOVFF 0x4, TMR0H
+0128  FFD7     NOP
+0118  C015     MOVFF timer, TMR0L
+011A  FFD6     NOP
+012A  C003     MOVFF timer, TMR0L
+012C  FFD6     NOP
+011C  0012     RETURN 0
+012E  0012     RETURN 0
+---  C:/Users/Marcel/Dropbox/School/CAN-2/plib/Timers/t0open.c  -----------------------------------------
+00EA  5013     MOVF config, W, ACCESS
+00EC  0B7F     ANDLW 0x7F
+00EE  6ED5     MOVWF T0CON, ACCESS
+00F0  0E00     MOVLW 0x0
+00F2  6ED7     MOVWF TMR0H, ACCESS
+00F4  0E00     MOVLW 0x0
+00F6  6ED6     MOVWF TMR0L, ACCESS
+00F8  94F2     BCF INTCON, 2, ACCESS
+00FA  AE13     BTFSS config, 7, ACCESS
+00FC  D001     BRA 0x100
+00FE  D001     BRA 0x102
+0100  D002     BRA 0x106
+0102  8AF2     BSF INTCON, 5, ACCESS
+0104  D001     BRA 0x108
+0106  9AF2     BCF INTCON, 5, ACCESS
+0108  8ED5     BSF T0CON, 7, ACCESS
+010A  0012     RETURN 0
+---  C:/Users/Marcel/Dropbox/School/CAN-2/main.c  -------------------------------------------------------
+1:             #include "xc.h"
+2:             #include "fuses.h"
+3:             #include "main.h"
+4:             #include "timers.h"
+5:             
+6:             #define _XTAL_FREQ 8000000
+7:             
+8:             #define LED_GROEN LATAbits.LATA0
+9:             #define LED_ROOD LATAbits.LATA2
+10:            //#define LED_ROOD2 LATCbits.LATC2
+11:            
+12:            #define BUTTON_ZWART PORTCbits.RC1
+13:            #define BUTTON_ROOD PORTCbits.RC2
+14:            
+15:            int timer0_switch;
+16:            
+17:            void interrupt ISR(void){
+18:                    if(INTCONbits.TMR0IF){
+0040  A4F2     BTFSS INTCON, 2, ACCESS
+0042  D001     BRA 0x46
+0044  D001     BRA 0x48
+0046  D019     BRA 0x7A
+19:                        INTCONbits.TMR0IF = 0;
+0048  94F2     BCF INTCON, 2, ACCESS
+20:                        if(timer0_switch) {
+004A  5019     MOVF 0x19, W, ACCESS
+004C  1018     IORWF timer0_switch, W, ACCESS
+004E  B4D8     BTFSC STATUS, 2, ACCESS
+0050  D001     BRA 0x54
+0052  D001     BRA 0x56
+0054  D007     BRA 0x64
+21:                            WriteTimer0(26472);
+0056  0E67     MOVLW 0x67
+0058  6E02     MOVWF 0x2, ACCESS
+005A  0E68     MOVLW 0x68
+005C  6E01     MOVWF timer0, ACCESS
+005E  EC8F     CALL 0x11E, 0
+0060  F000     NOP
+22:                        }
+0062  D008     BRA 0x74
+23:                        else {
+24:                            WriteTimer0(26473);
+0064  0E67     MOVLW 0x67
+0066  6E02     MOVWF 0x2, ACCESS
+0068  0E69     MOVLW 0x69
+006A  6E01     MOVWF timer0, ACCESS
+006C  EC8F     CALL 0x11E, 0
+006E  F000     NOP
+25:                            LED_GROEN ^= 1;
+0070  7089     BTG LATA, 0, ACCESS
+0072  D000     BRA 0x74
+26:                        }
+27:                        timer0_switch ^= 1;
+0074  0E01     MOVLW 0x1
+0076  1A18     XORWF timer0_switch, F, ACCESS
+0078  D000     BRA 0x7A
+28:                    }
+29:            }
+007A  C012     MOVFF 0x12, TABLAT
+30:            
+31:            void main(void) {
+32:                //osc setup
+33:                OSCTUNEbits.INTSRC = 1;
+00B8  8E9B     BSF OSCTUNE, 7, ACCESS
+34:            //    OSCTUNEbits.TUN = 0b011111;
+35:            
+36:            //    OSCTUNEbits.TUN = 0b100000;
+37:            
+38:                TRISAbits.TRISA0 = 0;
+00BA  9092     BCF TRISA, 0, ACCESS
+39:                TRISAbits.TRISA2 = 0;
+00BC  9492     BCF TRISA, 2, ACCESS
+40:                TRISCbits.TRISC1 = 1;
+00BE  8294     BSF TRISC, 1, ACCESS
+41:                TRISCbits.TRISC2 = 1;
+00C0  8494     BSF TRISC, 2, ACCESS
+42:            //    TRISCbits.TRISC3 = 0; //osc ref out
+43:            //    TRISCbits.TRISC2 = 0;
+44:            
+45:            //    PIE5bits.RXB0IE = 0; //Receive Buffer 0 Interrupt Flag bit enable
+46:            
+47:                
+48:            
+49:            //    setup_uart();
+50:            //    setup_can();
+51:            
+52:            
+53:            //    OpenTimer0(TIMER_INT_ON & T0_16BIT & T0_SOURCE_INT & T0_EDGE_RISE & T0_PS_1_256);
+54:            //    WriteTimer0(500);
+55:            
+56:            //    TMR0H = 0x3D;
+57:            //    TMR0L = 0x09;
+58:            //    T0CONbits.TMR0ON = 1;
+59:            //    T0CONbits.T08BIT = 0;
+60:            //    T0CONbits.T0CS = 0;
+61:            //    T0CONbits.PSA = 0;
+62:            //    T0CONbits.T0PS = 0b111;
+63:            
+64:                OpenTimer0(TIMER_INT_ON & T0_16BIT & T0_SOURCE_INT & T0_EDGE_RISE & T0_PS_1_256);
+00C2  6E17     MOVWF 0x17, ACCESS
+00C4  0E87     MOVLW 0x87
+00C6  6E13     MOVWF config, ACCESS
+00C8  5017     MOVF 0x17, W, ACCESS
+00CA  EC75     CALL 0xEA, 0
+00CC  F000     NOP
+65:                WriteTimer0(26472);
+00CE  0E67     MOVLW 0x67
+00D0  6E14     MOVWF 0x14, ACCESS
+00D2  0E68     MOVLW 0x68
+00D4  6E13     MOVWF config, ACCESS
+00D6  EC86     CALL 0x10C, 0
+00D8  F000     NOP
+66:            
+67:                INTCONbits.PEIE_GIEL = 1;
+00DA  8CF2     BSF INTCON, 6, ACCESS
+68:                INTCONbits.GIE_GIEH = 1;
+00DC  8EF2     BSF INTCON, 7, ACCESS
+69:                INTCONbits.TMR0IE = 1;
+00DE  8AF2     BSF INTCON, 5, ACCESS
+70:            
+71:                LED_GROEN = 0;
+00E0  9089     BCF LATA, 0, ACCESS
+72:                LED_ROOD = 0;
+00E2  9489     BCF LATA, 2, ACCESS
+73:            
+74:                while(1){
+00E4  D7FF     BRA 0xE4
+75:            
+76:            //        TXB0DLCbits.DLC = 0x02; //TRANSMIT BUFFER ?n? DATA LENGTH
+77:            //        TXB0D0 = 0x10;
+78:            //        TXB0D1 = 0x12;
+79:            //        TXB0CONbits.TXREQ = 1;
+80:            //        while(TXB0CONbits.TXREQ);
+81:            //        LED_GROEN ^= 1;
+82:            //        LED_ROOD ^= 1;
+83:            //        __delay_ms(50);
+84:            //        CLRWDT();
+85:            //        if(COMSTATbits.RXBP) {
+86:            //            LED_ROOD = 1;
+87:            //        }
+88:            //        else {
+89:            //            LED_ROOD = 0;
+90:            //        }
+91:            
+92:            
+93:            //       LED_ROOD ^= 1;
+94:            //       __delay_ms(50);
+95:            //        if(!BUTTON_ZWART) {
+96:            //            TXB0SIDH = 0x00; //Transmit buffer identifier high byte (standard)
+97:            //            TXB0SIDLbits.SID = 0x00;
+98:            //            TXB0DLCbits.DLC = 0x02; //TRANSMIT BUFFER ?n? DATA LENGTH
+99:            //            TXB0D0 = 0x01;
+100:           //            TXB0D1 = 0x02;
+101:           //            TXB0CON =0B00001000; //send can masage prio 00
+102:           //            while((TXB0CON & 0B00001000)== 0B00001000); //CAN ready
+103:           //            LED_GROEN ^= 1;
+104:           //            while(!BUTTON_ZWART);
+105:           //        }
+106:           //
+107:           //        if(!BUTTON_ROOD) {
+108:           //            TXB0SIDH = 0x00; //Transmit buffer identifier high byte (standard)
+109:           //            TXB0SIDLbits.SID = 0x00;
+110:           //            TXB0DLCbits.DLC = 0x02; //TRANSMIT BUFFER ?n? DATA LENGTH
+111:           //            TXB0D0 = 0x03;
+112:           //            TXB0D1 = 0x04;
+113:           //            TXB0CON =0B00001000; //send can masage prio 00
+114:           //            while((TXB0CON & 0B00001000)== 0B00001000); //CAN ready
+115:           //            LED_ROOD ^= 1;
+116:           //            while(!BUTTON_ROOD);
+117:           //        }
+118:           //
+119:           //        if(PIR5bits.RXB0IF) {
+120:           //            LED_GROEN ^= 1;
+121:           //            PIR5bits.RXB0IF=0;
+122:           //            RXB0CONbits.RXFUL =0;
+123:           //        }
+124:           //        if(!BUTTON_ZWART) {
+125:           //            LED_GROEN ^= 1;
+126:           //            TXB0D0 = 0x00;
+127:           //            TXB0CON =0B00001000; //send can masage prio 00
+128:           //            //while((TXB0CON & 0B00001000)== 0B00001000); //CAN ready
+129:           //            while(!BUTTON_ZWART);
+130:           //        }
+131:           //
+132:           //        if(!BUTTON_ROOD) {
+133:           //            LED_ROOD ^= 1;
+134:           //            TXB0D0 = 0x01;
+135:           //            TXB0CON =0B00001000; //send can masage prio 00
+136:           //            //while((TXB0CON & 0B00001000)== 0B00001000); //CAN ready
+137:           //            while(!BUTTON_ROOD);
+138:           //        }
+139:           //            LATBbits.LATB0 ^= 1;
+140:           
+141:           //            TXB0D1 = 0x01;
+142:           //            TXB0D2 = 0x02;
+143:           //            TXB0D3 = 0x03;
+144:           //            TXB0D4 = 0x04;
+145:           //            TXB0D5 = 0x05;
+146:           //            TXB0D6 = 0x06;
+147:           //            TXB0D7 = 0x07;
+148:           //            TXB0CON =0B00001000; //send can masage prio 00
+149:           //            while((TXB0CON & 0B00001000)== 0B00001000); //CAN ready
+150:           //            LED_GROEN ^= 1;
+151:           //            //PIR1bits.RC1IF=0;
+152:           //            for(int i=0; i<10; i++) {
+153:           //                __delay_ms(50);
+154:           //            }
+155:           
+156:           //        if(RCSTA1bits.FERR || RCSTAbits.OERR){
+157:           //            RCSTA1bits.CREN = 0;
+158:           //            dump = RCREG1;
+159:           //            RCSTA1bits.CREN = 1;
+160:           //        }
+161:               }
+162:           }
+00E6  EF5A     GOTO 0xB4
